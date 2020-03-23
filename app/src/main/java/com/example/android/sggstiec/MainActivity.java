@@ -1,6 +1,7 @@
 package com.example.android.sggstiec;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -14,12 +15,26 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import com.camerakit.CameraKitView;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
+
+import java.util.List;
+
 import im.delight.android.location.SimpleLocation;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    private static final String TAG = "MainActivity";
     private SimpleLocation location;
+    private CameraKitView cameraKitView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         location = new SimpleLocation(this);
+        cameraKitView = findViewById(R.id.camera);
 
         findViewById(R.id.someView).setOnClickListener(new View.OnClickListener() {
 
@@ -44,9 +60,52 @@ public class MainActivity extends AppCompatActivity {
 
                 // TODO
                 Toast.makeText(MainActivity.this, "Latitude: " + latitude + "Longitude: " + longitude, Toast.LENGTH_SHORT).show();
-                getDistance(latitude, longitude);
+                float distanceInMeters = getDistance(latitude, longitude);
+                if(distanceInMeters <= 100) {
+                    setContentView(R.layout.camera_view);
+                    scanQRCode();
+                }
             }
 
+        });
+    }
+
+    private void scanQRCode() {
+        cameraKitView.captureImage(new  CameraKitView.ImageCallback() {
+            @Override
+            public void onImage(CameraKitView cameraKitView, final byte[] capturedImage) {
+                // capturedImage contains the image from the CameraKitView.
+                FirebaseVisionImageMetadata metadata = new FirebaseVisionImageMetadata.Builder()
+                        .setWidth(480)   // 480x360 is typically sufficient for
+                        .setHeight(360)  // image recognition
+                        .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_NV21)
+                        .setRotation(FirebaseVisionImageMetadata.ROTATION_0)
+                        .build();
+
+                FirebaseVisionImage image = FirebaseVisionImage.fromByteArray(capturedImage, metadata);
+                FirebaseVisionBarcodeDetector detector = FirebaseVision.getInstance()
+                        .getVisionBarcodeDetector();
+
+                Task<List<FirebaseVisionBarcode>> result = detector.detectInImage(image)
+                        .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionBarcode>>() {
+                            @Override
+                            public void onSuccess(List<FirebaseVisionBarcode> barcodes) {
+                                // Task completed successfully
+                                // ...
+                                for (FirebaseVisionBarcode barcode: barcodes) {
+                                    String code = barcode.getDisplayValue();
+                                    Toast.makeText(MainActivity.this, "Scanned QR Code: " + code, Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // Task failed with an exception
+                                // ...
+                            }
+                        });
+            }
         });
     }
 
@@ -70,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    private void getDistance(double latitude,double longitude) {
+    private float getDistance(double latitude,double longitude) {
         // User location
         Location userLocation = new Location("");
         userLocation.setLatitude(latitude);
@@ -83,6 +142,8 @@ public class MainActivity extends AppCompatActivity {
 
         float distanceInMeters =  targetLocation.distanceTo(userLocation);
         Toast.makeText(this, "Distance: " + distanceInMeters, Toast.LENGTH_SHORT).show();
+
+        return distanceInMeters;
     }
 
     public boolean checkLocationPermission() {
@@ -155,4 +216,46 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
+//    /**
+//     * Get the angle by which an image must be rotated given the device's current
+//     * orientation.
+//     */
+//    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+//    private int getRotationCompensation(String cameraId, Activity activity, Context context)
+//            throws CameraAccessException {
+//        // Get the device's current rotation relative to its "native" orientation.
+//        // Then, from the ORIENTATIONS table, look up the angle the image must be
+//        // rotated to compensate for the device's rotation.
+//        int deviceRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+//        int rotationCompensation = ORIENTATIONS.get(deviceRotation);
+//        // On most devices, the sensor orientation is 90 degrees, but for some
+//        // devices it is 270 degrees. For devices with a sensor orientation of
+//        // 270, rotate the image an additional 180 ((270 + 270) % 360) degrees.
+//        CameraManager cameraManager = (CameraManager) context.getSystemService(CAMERA_SERVICE);
+//        int sensorOrientation = cameraManager
+//                .getCameraCharacteristics(cameraId)
+//                .get(CameraCharacteristics.SENSOR_ORIENTATION);
+//        rotationCompensation = (rotationCompensation + sensorOrientation + 270) % 360;
+//        // Return the corresponding FirebaseVisionImageMetadata rotation value.
+//        int result;
+//        switch (rotationCompensation) {
+//            case 0:
+//                result = FirebaseVisionImageMetadata.ROTATION_0;
+//                break;
+//            case 90:
+//                result = FirebaseVisionImageMetadata.ROTATION_90;
+//                break;
+//            case 180:
+//                result = FirebaseVisionImageMetadata.ROTATION_180;
+//                break;
+//            case 270:
+//                result = FirebaseVisionImageMetadata.ROTATION_270;
+//                break;
+//            default:
+//                result = FirebaseVisionImageMetadata.ROTATION_0;
+//                Log.e(TAG, "Bad rotation value: " + rotationCompensation);
+//        }
+//        return result;
+//    }
 }
