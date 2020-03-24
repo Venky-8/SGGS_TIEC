@@ -8,6 +8,7 @@ import androidx.appcompat.widget.Toolbar;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +23,15 @@ import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.mikepenz.materialdrawer.AccountHeader;
+import com.mikepenz.materialdrawer.AccountHeaderBuilder;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.holder.BadgeStyle;
+import com.mikepenz.materialdrawer.model.DividerDrawerItem;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 
 import im.delight.android.location.SimpleLocation;
 
@@ -32,19 +42,43 @@ public class MainActivity extends AppCompatActivity {
     private static final int SIGN_IN_REQUEST_CODE = 1;
 
     private FirebaseAuth mAuth;
+    String userName = "Welcome!";
 
     private SimpleLocation location;
     private Button scan_btn;
     public static  TextView result;
+
+    private AccountHeader headerResult;
+    private Drawer drawer;
+    private IProfile profile;
+    private PrimaryDrawerItem itemName = new PrimaryDrawerItem().withIdentifier(1).withName("Welcome!");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar myToolbar = findViewById(R.id.my_toolbar);
-        setSupportActionBar(myToolbar);
-        myToolbar.showOverflowMenu();
+        Toolbar toolbar = findViewById(R.id.my_toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.showOverflowMenu();
+
+        profile = new ProfileDrawerItem().withName(userName).withEmail("mikepenz@gmail.com").withIcon("https://avatars3.githubusercontent.com/u/1476232?v=3&s=460").withIdentifier(100);
+        headerResult = new AccountHeaderBuilder()
+                .withActivity(this)
+                .withTranslucentStatusBar(true)
+                .addProfiles(profile)
+                .withSavedInstance(savedInstanceState)
+                .build();
+
+        drawer = new DrawerBuilder()
+                .withActivity(this)
+                .withToolbar(toolbar)
+                .withAccountHeader(headerResult)
+                .addDrawerItems(
+                        itemName,
+                        new DividerDrawerItem()
+                )
+                .build();
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -125,6 +159,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void updateUI(FirebaseUser currentUser) {
+        userName = currentUser.getDisplayName();
+        profile.withName(currentUser.getDisplayName());
+        headerResult.updateProfile(profile);
+        itemName.withName(userName).withBadge("19").withBadgeStyle(new BadgeStyle().withTextColor(Color.WHITE).withColorRes(R.color.md_red_700));
+        drawer.updateItem(itemName);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -166,9 +208,6 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         }
-    }
-
-    private void updateUI(FirebaseUser currentUser) {
     }
 
     @Override
