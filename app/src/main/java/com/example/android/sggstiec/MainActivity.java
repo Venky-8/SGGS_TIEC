@@ -8,7 +8,6 @@ import androidx.appcompat.widget.Toolbar;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,10 +26,10 @@ import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
-import com.mikepenz.materialdrawer.holder.BadgeStyle;
 import com.mikepenz.materialdrawer.model.DividerDrawerItem;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 
 import im.delight.android.location.SimpleLocation;
@@ -50,8 +49,10 @@ public class MainActivity extends AppCompatActivity {
 
     private AccountHeader headerResult;
     private Drawer drawer;
-    private IProfile profile;
-    private PrimaryDrawerItem itemName = new PrimaryDrawerItem().withIdentifier(1).withName("Welcome!");
+    public static IProfile profile;
+    private PrimaryDrawerItem itemHome = new PrimaryDrawerItem().withIdentifier(1).withName("Home");
+    private PrimaryDrawerItem itemEdit = new PrimaryDrawerItem().withIdentifier(2).withName("Edit Profile");
+    private PrimaryDrawerItem itemSignOut = new PrimaryDrawerItem().withIdentifier(3).withName("Sign Out");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.showOverflowMenu();
 
-        profile = new ProfileDrawerItem().withName(userName).withEmail("mikepenz@gmail.com").withIcon("https://avatars3.githubusercontent.com/u/1476232?v=3&s=460").withIdentifier(100);
+        profile = new ProfileDrawerItem().withName(userName).withEmail("Get Started").withIcon(getResources().getDrawable(R.mipmap.profile)).withIdentifier(100);
         headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withTranslucentStatusBar(true)
@@ -75,10 +76,31 @@ public class MainActivity extends AppCompatActivity {
                 .withToolbar(toolbar)
                 .withAccountHeader(headerResult)
                 .addDrawerItems(
-                        itemName,
+                        itemHome,
+                        new DividerDrawerItem(),
+                        itemEdit,
+                        new DividerDrawerItem(),
+                        itemSignOut,
                         new DividerDrawerItem()
-                )
-                .build();
+                ).build();
+
+//                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+//                    @Override
+//                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+//                        switch (position) {
+//                            case 1:
+//                                break;
+//                            case 2:
+//                                startActivity(new Intent(getApplicationContext(), EditProfileActivity.class));
+//                                break;
+//                            case 3:
+//                                mAuth.signOut();
+//                                finishAffinity();
+//                                break;
+//                        }
+//                        return false;
+//                    }
+//                })
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -162,9 +184,8 @@ public class MainActivity extends AppCompatActivity {
     private void updateUI(FirebaseUser currentUser) {
         userName = currentUser.getDisplayName();
         profile.withName(currentUser.getDisplayName());
+        profile.withEmail(currentUser.getEmail());
         headerResult.updateProfile(profile);
-        itemName.withName(userName).withBadge("19").withBadgeStyle(new BadgeStyle().withTextColor(Color.WHITE).withColorRes(R.color.md_red_700));
-        drawer.updateItem(itemName);
     }
 
     @Override
@@ -180,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_sign_out: {
                 // do your sign-out stuff
                 mAuth.signOut();
-                finish();
+                finishAffinity();
                 break;
             }
             // case blocks for other MenuItems (if any)
