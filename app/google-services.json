@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "439864941382",
+    "firebase_url": "https://sggs-tiec.firebaseio.com",
+    "project_id": "sggs-tiec",
+    "storage_bucket": "sggs-tiec.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:439864941382:android:e246e71d351bf6aaa9a347",
+        "android_client_info": {
+          "package_name": "com.example.android.sggstiec"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "439864941382-3huohjs7b05mnjcuf6gbe091fmjgf3m8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android.sggstiec",
+            "certificate_hash": "df12773541b7c3f8e60120dec5ee104223418acd"
+          }
+        },
+        {
+          "client_id": "439864941382-fhun4kqs8ookbkob6apiotpblo685n10.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCigWjEs-tFwGjDZr9FJFHExsSxqAzabtQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "439864941382-fhun4kqs8ookbkob6apiotpblo685n10.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
