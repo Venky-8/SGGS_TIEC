@@ -1,7 +1,9 @@
 package com.example.android.sggstiec;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.Manifest;
 import android.content.Intent;
@@ -9,17 +11,28 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import im.delight.android.location.SimpleLocation;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private static final String TAG = "MainActivity";
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    private static final int SIGN_IN_REQUEST_CODE = 1;
+
+    private FirebaseAuth mAuth;
+
     private SimpleLocation location;
     private Button scan_btn;
     public static  TextView result;
@@ -29,11 +42,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        location = new SimpleLocation(this);
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+        myToolbar.showOverflowMenu();
+
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         scan_btn = findViewById(R.id.scan_button);
         result = findViewById(R.id.result_text);
 
+        location = new SimpleLocation(this);
         marshmallowGPSPremissionCheck();
 
         scan_btn.setOnClickListener(new View.OnClickListener() {
@@ -74,6 +93,83 @@ public class MainActivity extends AppCompatActivity {
 //
 //        // ...
 //    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        signIn();
+    }
+
+    private void signIn() {
+        // Check if user is signed in (non-null) and update UI accordingly.
+        if(FirebaseAuth.getInstance().getCurrentUser() == null) {
+            // Start sign in/sign up activity
+            startActivityForResult(
+                    AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .build(),
+                    SIGN_IN_REQUEST_CODE
+            );
+        } else {
+//            String fullName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+//            String name = fullName;
+//            if(fullName.contains(" ")) {
+//                name = fullName.substring(0, fullName.indexOf(" "));
+//            }
+//
+//            String wish = greet() + " " + capitalize(name);
+//            greetings.setText(wish);
+            updateUI(FirebaseAuth.getInstance().getCurrentUser());
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_sign_out: {
+                // do your sign-out stuff
+                mAuth.signOut();
+                finish();
+                break;
+            }
+            // case blocks for other MenuItems (if any)
+        }
+        return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == SIGN_IN_REQUEST_CODE) {
+            if(resultCode == RESULT_OK) {
+                Toast.makeText(this,
+                        "Successfully signed in. Welcome!",
+                        Toast.LENGTH_LONG)
+                        .show();
+            } else {
+                Toast.makeText(this,
+                        "We couldn't sign you in. Please try again later.",
+                        Toast.LENGTH_LONG)
+                        .show();
+
+                // Close the app
+                finish();
+            }
+        }
+    }
+
+    private void updateUI(FirebaseUser currentUser) {
+    }
 
     @Override
     protected void onPause() {

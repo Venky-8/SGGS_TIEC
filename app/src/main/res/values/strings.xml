@@ -3,4 +3,5 @@
     <string name="title_location_permission">Location Permission</string>
     <string name="text_location_permission">Location permission is required to identify if you are in TIEC lab</string>
     <string name="ok">Ok</string>
+    <string name="toolbar_sign_out">Sign Out</string>
 </resources>
