@@ -159,6 +159,14 @@ public class MainActivity extends AppCompatActivity {
         signIn();
     }
 
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        Log.d(TAG, "On Restart Called");
+        signIn();
+    }
+
     private void signIn() {
         // Check if user is signed in (non-null) and update UI accordingly.
         if(FirebaseAuth.getInstance().getCurrentUser() == null) {
@@ -166,19 +174,12 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(
                     AuthUI.getInstance()
                             .createSignInIntentBuilder()
+                            .setIsSmartLockEnabled(false)
                             .build(),
                     SIGN_IN_REQUEST_CODE
             );
         } else {
-//            String fullName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
-//            String name = fullName;
-//            if(fullName.contains(" ")) {
-//                name = fullName.substring(0, fullName.indexOf(" "));
-//            }
-//
-//            String wish = greet() + " " + capitalize(name);
-//            greetings.setText(wish);
-            updateUI(FirebaseAuth.getInstance().getCurrentUser());
+//            updateUI(FirebaseAuth.getInstance().getCurrentUser());
         }
     }
 
@@ -220,6 +221,9 @@ public class MainActivity extends AppCompatActivity {
                         "Successfully signed in. Welcome!",
                         Toast.LENGTH_LONG)
                         .show();
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                assert user != null;
+                updateUI(user);
             } else {
                 Toast.makeText(this,
                         "We couldn't sign you in. Please try again later.",
