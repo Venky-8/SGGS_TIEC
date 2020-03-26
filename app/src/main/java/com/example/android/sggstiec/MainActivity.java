@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -82,26 +83,26 @@ public class MainActivity extends AppCompatActivity {
                         new DividerDrawerItem(),
                         itemSignOut,
                         new DividerDrawerItem()
-                ).build();
-
-//                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
-//                    @Override
-//                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
-//                        switch (position) {
-//                            case 1:
-//                                break;
-//                            case 2:
-//                                startActivity(new Intent(getApplicationContext(), EditProfileActivity.class));
-//                                break;
-//                            case 3:
-//                                mAuth.signOut();
-//                                finishAffinity();
-//                                break;
-//                        }
-//                        return false;
-//                    }
-//                })
-
+                )
+                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+                        switch ((int) drawerItem.getIdentifier()) {
+                            case 1:
+                                break;
+                            case 2:
+                                startActivity(new Intent(getApplicationContext(), EditProfileActivity.class));
+                                break;
+                            default:
+                                Log.d(TAG, "identifier:" + (int) drawerItem.getIdentifier());
+                                mAuth.signOut();
+                                finishAffinity();
+                                break;
+                        }
+                        return false;
+                    }
+                })
+                .build();
         mAuth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 

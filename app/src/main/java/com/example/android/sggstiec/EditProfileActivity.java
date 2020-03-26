@@ -56,26 +56,27 @@ public class EditProfileActivity extends AppCompatActivity {
                         new DividerDrawerItem(),
                         itemSignOut,
                         new DividerDrawerItem()
-                ).build();
+                )
+                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+                        switch ((int) drawerItem.getIdentifier()) {
+                            case 1:
+                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                break;
+                            case 2:
+                                break;
+                            default:
+                                mAuth.signOut();
+                                finishAffinity();
+                                break;
+                        }
+                        return false;
+                    }
+                })
+                .build();
 
-//                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
-//                    @Override
-//                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
-//                        switch ((int) drawerItem.getIdentifier()) {
-//                            case 1:
-//                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
-//                                break;
-//                            case 2:
-//                                startActivity(new Intent(getApplicationContext(), EditProfileActivity.class));
-//                                break;
-//                            case 3:
-//                                mAuth.signOut();
-//                                finishAffinity();
-//                                break;
-//                        }
-//                        return false;
-//                    }
-//                })
+        drawer.setSelection(2, false);
 
     }
 
