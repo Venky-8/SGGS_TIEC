@@ -34,6 +34,9 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import im.delight.android.location.SimpleLocation;
 
 public class MainActivity extends AppCompatActivity {
@@ -252,7 +255,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void markAttendance(String resultText) {
         if(resultText == "SGGS_TIEC_ENTRY") {
-
+            Map<String, Object> data = new HashMap<>();
+//            data.put("firstName", firstNameEditText.getText().toString());
+//            data.put("middleName", middleNameEditText.getText().toString());
+//            data.put("lastName", lastNameEditText.getText().toString());
+//            data.put("year", yearDropDown.getSelectedItem().toString());
+//            data.put("email", emailEditText.getText().toString());
+//            data.put("regNo", regIdEditText.getText().toString());
+//            db.collection("attendance").document(mAuth.getCurrentUser().getUid()).set(data);
         }
     }
 

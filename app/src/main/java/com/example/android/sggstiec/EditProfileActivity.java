@@ -6,18 +6,16 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -42,7 +40,13 @@ public class EditProfileActivity extends AppCompatActivity {
     private PrimaryDrawerItem itemEdit = new PrimaryDrawerItem().withIdentifier(2).withName("Edit Profile");
     private PrimaryDrawerItem itemSignOut = new PrimaryDrawerItem().withIdentifier(3).withName("Sign Out");
 
-    Spinner yearDropDown;
+    private EditText firstNameEditText;
+    private EditText middleNameEditText;
+    private EditText lastNameEditText;
+    private EditText emailEditText;
+    private EditText regIdEditText;
+    private Spinner yearDropDown;
+    private Button update;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,55 +99,33 @@ public class EditProfileActivity extends AppCompatActivity {
 
         drawer.setSelection(2, false);
 
+        firstNameEditText = findViewById(R.id.firstNameEditText);
+        middleNameEditText = findViewById(R.id.middleNameEditText);
+        lastNameEditText = findViewById(R.id.lastNameEditText);
+        emailEditText = findViewById(R.id.emailEditText);
+        regIdEditText = findViewById(R.id.regIdEditText);
         yearDropDown = findViewById(R.id.spinner);
-        String[] items = new String[]{"1", "2", "3", "4"};
+        update = findViewById(R.id.update_profile_button);
+
+        String[] items = new String[]{"BTECH FY", "BTECH SY", "BTECH TY", "BTECH", "MTECH FY", "MTECH"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
         yearDropDown.setAdapter(adapter);
 
-        yearDropDown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                switch (i) {
-                    case 1:
-                        Log.d(TAG, "id: " + l);
-                        break;
-                    case 2:
-                        Log.d(TAG, "id: " + l);
-                        break;
-                    default:
-                        break;
-                }
-            }
 
+        update.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
+            public void onClick(View view) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("firstName", firstNameEditText.getText().toString());
+                data.put("middleName", middleNameEditText.getText().toString());
+                data.put("lastName", lastNameEditText.getText().toString());
+                data.put("year", yearDropDown.getSelectedItem().toString());
+                data.put("email", emailEditText.getText().toString());
+                data.put("regNo", regIdEditText.getText().toString());
+                db.collection("users").document(mAuth.getCurrentUser().getUid()).set(data);
             }
         });
 
-    }
-
-    public void setUserData() {
-        Map<String, Object> user = new HashMap<>();
-        user.put("first", "Ada");
-        user.put("last", "Lovelace");
-        user.put("born", 1815);
-
-        // Add a new document with a generated ID
-        db.collection("users")
-                .add(user)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
     }
 
     @Override
