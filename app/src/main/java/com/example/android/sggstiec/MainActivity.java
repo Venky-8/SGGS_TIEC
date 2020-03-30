@@ -42,7 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int SIGN_IN_REQUEST_CODE = 1;
 
     private FirebaseAuth mAuth;
-    String userName = "Welcome!";
+    private String userName = "Welcome!";
+    private String email = "Get Started";
 
     private SimpleLocation location;
     private Button scan_btn;
@@ -64,7 +65,13 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.showOverflowMenu();
 
-        profile = new ProfileDrawerItem().withName(userName).withEmail("Get Started").withIcon(getResources().getDrawable(R.mipmap.profile)).withIdentifier(100);
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if(currentUser == null) {
+            signIn();
+        }
+
+        profile = new ProfileDrawerItem().withName(userName).withEmail(email).withIcon(getResources().getDrawable(R.mipmap.profile)).withIdentifier(100);
         headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withTranslucentStatusBar(true)
@@ -156,7 +163,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        signIn();
+        Log.d(TAG, "On Start Called");
+    }
+
+    @Override
+    protected void onPause() {
+        // stop location updates (saves battery)
+        location.endUpdates();
+
+        // ...
+
+        super.onPause();
+
+        Log.d(TAG, "On Pause Called");
     }
 
     @Override
@@ -164,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
         super.onRestart();
 
         Log.d(TAG, "On Restart Called");
-        signIn();
     }
 
     private void signIn() {
@@ -178,37 +196,16 @@ public class MainActivity extends AppCompatActivity {
                             .build(),
                     SIGN_IN_REQUEST_CODE
             );
-        } else {
-//            updateUI(FirebaseAuth.getInstance().getCurrentUser());
         }
     }
 
     private void updateUI(FirebaseUser currentUser) {
+        Log.d(TAG, "updateUI() Called");
         userName = currentUser.getDisplayName();
-        profile.withName(currentUser.getDisplayName());
-        profile.withEmail(currentUser.getEmail());
+        email = currentUser.getEmail();
+        profile.withName(userName);
+        profile.withEmail(email);
         headerResult.updateProfile(profile);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_sign_out: {
-                // do your sign-out stuff
-                mAuth.signOut();
-                finishAffinity();
-                break;
-            }
-            // case blocks for other MenuItems (if any)
-        }
-        return true;
     }
 
     @Override
@@ -237,13 +234,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        // stop location updates (saves battery)
-        location.endUpdates();
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        return true;
+    }
 
-        // ...
-
-        super.onPause();
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_sign_out: {
+                // do your sign-out stuff
+                mAuth.signOut();
+                finishAffinity();
+                break;
+            }
+            // case blocks for other MenuItems (if any)
+        }
+        return true;
     }
 
     private float getDistance(double latitude,double longitude) {
