@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -40,14 +41,16 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private static final int SIGN_IN_REQUEST_CODE = 1;
+    private static final int LAUNCH_SCAN_CODE_ACTIVITY = 2;
 
     private FirebaseAuth mAuth;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
     private String userName = "Welcome!";
     private String email = "Get Started";
 
     private SimpleLocation location;
     private Button scan_btn;
-    public static  TextView result;
+    public TextView result;
 
     private AccountHeader headerResult;
     private Drawer drawer;
@@ -65,11 +68,12 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.showOverflowMenu();
 
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        mAuth = FirebaseAuth.getInstance();
 
-        if(currentUser == null) {
-            signIn();
-        }
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        db = FirebaseFirestore.getInstance();
+
+//        Log.i(TAG, "UID of current user: " + currentUser.getUid());
 
         profile = new ProfileDrawerItem().withName(userName).withEmail(email).withIcon(getResources().getDrawable(R.mipmap.profile)).withIdentifier(100);
         headerResult = new AccountHeaderBuilder()
@@ -110,8 +114,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .build();
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         scan_btn = findViewById(R.id.scan_button);
         result = findViewById(R.id.result_text);
@@ -140,11 +142,18 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
                 } else {
                     Toast.makeText(MainActivity.this, "You are not near TIEC Lab", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
+                    startActivityForResult(new Intent(getApplicationContext(), ScanCodeActivity.class), LAUNCH_SCAN_CODE_ACTIVITY);
                 }
             }
 
         });
+
+        if(currentUser == null) {
+            Log.d(TAG, "Current user is null");
+            signIn();
+        } else {
+            updateUI(currentUser);
+        }
     }
 
 //    @Override
@@ -230,6 +239,20 @@ public class MainActivity extends AppCompatActivity {
                 // Close the app
                 finish();
             }
+        } else if(requestCode == LAUNCH_SCAN_CODE_ACTIVITY) {
+            if(resultCode == Activity.RESULT_OK) {
+                String resultText = data.getStringExtra("result");
+                markAttendance(resultText);
+            }
+            if(resultCode == Activity.RESULT_CANCELED) {
+                //Write your code if there's no result
+            }
+        }
+    }
+
+    private void markAttendance(String resultText) {
+        if(resultText == "SGGS_TIEC_ENTRY") {
+
         }
     }
 

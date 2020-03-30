@@ -2,6 +2,8 @@ package com.example.android.sggstiec;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.zxing.Result;
@@ -21,7 +23,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     @Override
     public void handleResult(Result rawResult) {
-        MainActivity.result.setText(rawResult.getText());
+        Intent returnIntent = new Intent();
+        returnIntent.putExtra("result", rawResult.getText());
+        setResult(Activity.RESULT_OK, returnIntent);
         onBackPressed();
     }
 
