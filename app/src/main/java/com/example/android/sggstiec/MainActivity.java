@@ -16,11 +16,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -34,8 +38,14 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import im.delight.android.location.SimpleLocation;
 
@@ -53,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SimpleLocation location;
     private Button scan_btn;
-    public TextView result;
+    private Spinner purposeDropDown;
 
     private AccountHeader headerResult;
     private Drawer drawer;
@@ -119,7 +129,11 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         scan_btn = findViewById(R.id.scan_button);
-        result = findViewById(R.id.result_text);
+        purposeDropDown = findViewById(R.id.purpose_spinner);
+
+        String[] items = new String[]{"Study", "Project", "Other"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+        purposeDropDown.setAdapter(adapter);
 
         location = new SimpleLocation(this);
         marshmallowGPSPremissionCheck();
@@ -151,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
-        if(currentUser == null) {
+        if (currentUser == null) {
             Log.d(TAG, "Current user is null");
             signIn();
         } else {
@@ -199,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void signIn() {
         // Check if user is signed in (non-null) and update UI accordingly.
-        if(FirebaseAuth.getInstance().getCurrentUser() == null) {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             // Start sign in/sign up activity
             startActivityForResult(
                     AuthUI.getInstance()
@@ -224,8 +238,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == SIGN_IN_REQUEST_CODE) {
-            if(resultCode == RESULT_OK) {
+        if (requestCode == SIGN_IN_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
                 Toast.makeText(this,
                         "Successfully signed in. Welcome!",
                         Toast.LENGTH_LONG)
@@ -242,27 +256,47 @@ public class MainActivity extends AppCompatActivity {
                 // Close the app
                 finish();
             }
-        } else if(requestCode == LAUNCH_SCAN_CODE_ACTIVITY) {
-            if(resultCode == Activity.RESULT_OK) {
+        } else if (requestCode == LAUNCH_SCAN_CODE_ACTIVITY) {
+            if (resultCode == Activity.RESULT_OK) {
                 String resultText = data.getStringExtra("result");
                 markAttendance(resultText);
             }
-            if(resultCode == Activity.RESULT_CANCELED) {
+            if (resultCode == Activity.RESULT_CANCELED) {
                 //Write your code if there's no result
             }
         }
     }
 
+    public static String getCurrentTime(long epochTime) {
+        Date date = new Date(epochTime);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        formatter.setTimeZone(TimeZone.getTimeZone("GMT+05:30"));
+        return formatter.format(date);
+    }
+
     private void markAttendance(String resultText) {
-        if(resultText == "SGGS_TIEC_ENTRY") {
+        if (resultText.equals("SGGS_TIEC_ENTRY")) {
             Map<String, Object> data = new HashMap<>();
-//            data.put("firstName", firstNameEditText.getText().toString());
-//            data.put("middleName", middleNameEditText.getText().toString());
-//            data.put("lastName", lastNameEditText.getText().toString());
-//            data.put("year", yearDropDown.getSelectedItem().toString());
-//            data.put("email", emailEditText.getText().toString());
+            data.put("user", db.document("users/" + mAuth.getCurrentUser().getUid()));
+            data.put("time_in", System.currentTimeMillis());
+            data.put("time_out", System.currentTimeMillis());
+            data.put("purpose", purposeDropDown.getSelectedItem().toString());
 //            data.put("regNo", regIdEditText.getText().toString());
-//            db.collection("attendance").document(mAuth.getCurrentUser().getUid()).set(data);
+            db.collection("attendance").document()
+                    .set(data)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d(TAG, "DocumentSnapshot successfully written!");
+                            Toast.makeText(MainActivity.this, "Marked Attendance!", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error writing document", e);
+                        }
+                    });
         }
     }
 
@@ -287,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private float getDistance(double latitude,double longitude) {
+    private float getDistance(double latitude, double longitude) {
         // User location
         Location userLocation = new Location("");
         userLocation.setLatitude(latitude);
@@ -298,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
         targetLocation.setLatitude(19.110851d);
         targetLocation.setLongitude(77.293924d);
 
-        float distanceInMeters =  targetLocation.distanceTo(userLocation);
+        float distanceInMeters = targetLocation.distanceTo(userLocation);
         Toast.makeText(this, "Distance: " + distanceInMeters, Toast.LENGTH_SHORT).show();
 
         return distanceInMeters;
@@ -314,7 +348,7 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
                             Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.CAMERA}
-                            , MY_PERMISSIONS_REQUEST_LOCATION);
+                    , MY_PERMISSIONS_REQUEST_LOCATION);
         } else {
             //   gps functions.
         }
