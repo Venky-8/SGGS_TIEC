@@ -58,7 +58,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        Toolbar toolbar = findViewById(R.id.my_toolbar);
+        Toolbar toolbar = findViewById(R.id.my_toolbar1);
         setSupportActionBar(toolbar);
         toolbar.showOverflowMenu();
 

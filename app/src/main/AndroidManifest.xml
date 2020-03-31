@@ -17,8 +17,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".EditProfileActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
+        <activity android:name=".CheckOutActivity"></activity>
+        <activity
+            android:name=".EditProfileActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".ScanCodeActivity" />
         <activity
             android:name=".MainActivity"

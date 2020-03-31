@@ -27,6 +27,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -38,9 +40,7 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int LAUNCH_SCAN_CODE_ACTIVITY = 2;
 
     private FirebaseAuth mAuth;
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private String userName = "Welcome!";
     private String email = "Get Started";
 
@@ -84,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        db = FirebaseFirestore.getInstance();
 
 //        Log.i(TAG, "UID of current user: " + currentUser.getUid());
 
@@ -278,27 +277,31 @@ public class MainActivity extends AppCompatActivity {
         if (resultText.equals("SGGS_TIEC_ENTRY")) {
             Map<String, Object> data = new HashMap<>();
             data.put("user", db.document("users/" + mAuth.getCurrentUser().getUid()));
-            data.put("time_in", System.currentTimeMillis());
-            data.put("time_out", System.currentTimeMillis());
+            data.put("time_in", FieldValue.serverTimestamp());
+            data.put("time_out", FieldValue.serverTimestamp());
             data.put("purpose", purposeDropDown.getSelectedItem().toString());
 //            data.put("regNo", regIdEditText.getText().toString());
-            db.collection("attendance").document()
-                    .set(data)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+            db.collection("attendance")
+                    .add(data)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
-                        public void onSuccess(Void aVoid) {
-                            Log.d(TAG, "DocumentSnapshot successfully written!");
-                            Toast.makeText(MainActivity.this, "Marked Attendance!", Toast.LENGTH_SHORT).show();
+                        public void onSuccess(DocumentReference documentReference) {
+                            String document_id = documentReference.getId();
+                            Log.d(TAG, "DocumentSnapshot written with ID: " + document_id);
+                            Toast.makeText(MainActivity.this, "Checked In!", Toast.LENGTH_LONG).show();
+                            Intent myIntent = new Intent(getApplicationContext(), CheckOutActivity.class);
+                            myIntent.putExtra("document_id", document_id);
+                            startActivity(myIntent);
                         }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error writing document", e);
-                        }
-                    });
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.w(TAG, "Error writing document", e);
+                }
+            });
         }
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
