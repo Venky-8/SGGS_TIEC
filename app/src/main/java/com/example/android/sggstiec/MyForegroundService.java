@@ -124,15 +124,17 @@ public class MyForegroundService extends Service {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private void createNotificationChannel() {
-        Intent intent = new Intent(this, MainActivity.class);
-        // Create the TaskStackBuilder and add the intent, which inflates the back stack
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(MainActivity.class);
-        stackBuilder.addNextIntent(intent);
-        Intent checkOut = new Intent(this, CheckOutActivity.class);
-        stackBuilder.addNextIntent(checkOut);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent(getApplicationContext(), CheckOutActivity.class);
+//         Create the TaskStackBuilder and add the intent, which inflates the back stack
+//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+//        stackBuilder.addParentStack(MainActivity.class);
+//        stackBuilder.addNextIntent(intent);
+//        Intent checkOut = new Intent(this, CheckOutActivity.class);
+//        stackBuilder.addNextIntent(checkOut);
+//        PendingIntent resultPendingIntent =
+//                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this.getBaseContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationChannel chan = new NotificationChannel("tiec_service", "Check Out Service", NotificationManager.IMPORTANCE_DEFAULT);
         chan.setLightColor(Color.BLUE);
@@ -147,10 +149,12 @@ public class MyForegroundService extends Service {
                 .setContentTitle("Tap to check out after you leave TIEC Lab")
                 .setPriority(NotificationManager.IMPORTANCE_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE)
-                .setContentIntent(resultPendingIntent) //intent
+                .setContentIntent(pendingIntent) //intent
                 .build();
+
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         notificationManager.notify(1, notificationBuilder.build());
+
         startForeground(1, notification);
     }
 
