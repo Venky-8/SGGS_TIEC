@@ -14,11 +14,15 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -49,7 +53,6 @@ public class EditProfileActivity extends AppCompatActivity {
     private EditText emailEditText;
     private EditText regIdEditText;
     private Spinner yearDropDown;
-    private Button update;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,10 +111,10 @@ public class EditProfileActivity extends AppCompatActivity {
         emailEditText = findViewById(R.id.emailEditText);
         regIdEditText = findViewById(R.id.regIdEditText);
         yearDropDown = findViewById(R.id.spinner);
-        update = findViewById(R.id.update_profile_button);
+        Button update = findViewById(R.id.update_profile_button);
 
         String[] items = new String[]{"BTECH FY", "BTECH SY", "BTECH TY", "BTECH", "MTECH FY", "MTECH"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
         yearDropDown.setAdapter(adapter);
 
 
@@ -131,6 +134,7 @@ public class EditProfileActivity extends AppCompatActivity {
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
+                                Toast.makeText(EditProfileActivity.this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
                                 Log.d(TAG, "DocumentSnapshot successfully written!");
                                 Log.d(TAG, "Updated Profile");
                             }
@@ -141,7 +145,30 @@ public class EditProfileActivity extends AppCompatActivity {
                                 Log.w(TAG, "Error writing document", e);
                             }
                         });
-                ;
+            }
+        });
+
+        DocumentReference docRef = db.collection("users").document(mAuth.getCurrentUser().getUid());
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                        firstNameEditText.setText(String.valueOf(document.getData().get("firstName")));
+                        middleNameEditText.setText(String.valueOf(document.getData().get("middleName")));
+                        lastNameEditText.setText(String.valueOf(document.getData().get("lastName")));
+                        emailEditText.setText(String.valueOf(document.getData().get("email")));
+                        regIdEditText.setText(String.valueOf(document.getData().get("regNo")));
+                        yearDropDown.setSelection(adapter.getPosition(String.valueOf(document.getData().get("year"))));
+//                        Log.v(TAG, "Document id: " + document_id);
+                    } else {
+                        Log.d(TAG, "No such document");
+                    }
+                } else {
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
             }
         });
 
