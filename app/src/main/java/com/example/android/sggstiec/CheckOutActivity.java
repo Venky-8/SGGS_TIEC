@@ -28,6 +28,7 @@ public class CheckOutActivity extends AppCompatActivity {
     boolean isCheckedIn = false;
     SharedPreferences mPreferences;
     private String sharedPrefFile = "com.example.android.sggstiec";
+    boolean isServiceRunning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,12 +69,17 @@ public class CheckOutActivity extends AppCompatActivity {
         mPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE);
         int isCheckedIn = mPreferences.getInt("isCheckedIn", 0);
         final String document_id = mPreferences.getString("document_id", "");
+        isServiceRunning = mPreferences.getBoolean("isServiceRunning", false);
 
-//        if(isCheckedIn == 1) {
-//            Intent serviceIntent = new Intent(CheckOutActivity.this, MyForegroundService.class);
-//            serviceIntent.setAction(MyForegroundService.ACTION_START_FOREGROUND_SERVICE);
-//            startService(serviceIntent);
-//        }
+        if(!isServiceRunning) {
+            Intent serviceIntent = new Intent(CheckOutActivity.this, MyForegroundService.class);
+            serviceIntent.setAction(MyForegroundService.ACTION_START_FOREGROUND_SERVICE);
+            startService(serviceIntent);
+        }
+
+        SharedPreferences.Editor preferencesEditor = mPreferences.edit();
+        preferencesEditor.putBoolean("isServiceRunning", true);
+        preferencesEditor.apply();
 
         Button checkOut = findViewById(R.id.checkOutButton);
         checkOut.setOnClickListener(new View.OnClickListener() {
