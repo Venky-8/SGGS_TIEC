@@ -12,34 +12,53 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
+import android.widget.Chronometer;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.core.app.TaskStackBuilder;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MyForegroundService extends Service {
 
     private static final String TAG_FOREGROUND_SERVICE = "FOREGROUND_SERVICE";
     public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
     public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
-    public static final String ACTION_PAUSE = "ACTION_PAUSE";
     public static final String ACTION_PLAY = "ACTION_PLAY";
+    public static final String COUNTDOWN_BR = "com.example.android.sggstiec.countdown_br";
+    Chronometer simpleChronometer;
+    Intent timerIntent = new Intent(COUNTDOWN_BR);
+    Timer timer;
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+//        throw new UnsupportedOperationException("Not yet implemented");
+        return null;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG_FOREGROUND_SERVICE, "My foreground service onCreate().");
+//        simpleChronometer = CheckOutActivity.this.findViewById(R.id.simpleChronometer);
+//        simpleChronometer.setBase(SystemClock.elapsedRealtime());
+//        simpleChronometer.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+//            @Override
+//            public void onChronometerTick(Chronometer chronometer) {
+//                long elapsedMillis = SystemClock.elapsedRealtime() - chronometer.getBase();
+//                timerIntent.putExtra("timer", elapsedMillis);
+//                sendBroadcast(timerIntent);
+//            }
+//        });
+//        simpleChronometer.start();
     }
 
     @Override
@@ -47,28 +66,57 @@ public class MyForegroundService extends Service {
         if(intent != null) {
             String action = intent.getAction();
 
+//            simpleChronometer = new Chronometer(MyForegroundService.this);
+//            simpleChronometer.setBase(SystemClock.elapsedRealtime());
+//            simpleChronometer.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+//                @Override
+//                public void onChronometerTick(Chronometer chronometer) {
+//                    long elapsedMillis = SystemClock.elapsedRealtime() - chronometer.getBase();
+//                    timerIntent.putExtra("timer", elapsedMillis);
+//                    sendBroadcast(timerIntent);
+//                }
+//            });
+//            simpleChronometer.start();
+
+//            startTimer();
+
+
             if (action != null) {
                 switch (action) {
                     case ACTION_START_FOREGROUND_SERVICE:
                         startForegroundService();
-                        Toast.makeText(getApplicationContext(), "Foreground service is started.", Toast.LENGTH_LONG).show();
+//                        Toast.makeText(getApplicationContext(), "Foreground service is started.", Toast.LENGTH_LONG).show();
                         break;
                     case ACTION_STOP_FOREGROUND_SERVICE:
                         stopForegroundService();
-                        Toast.makeText(getApplicationContext(), "Foreground service is stopped.", Toast.LENGTH_LONG).show();
+//                        Toast.makeText(getApplicationContext(), "Foreground service is stopped.", Toast.LENGTH_LONG).show();
                         break;
-                    case ACTION_PLAY:
-                        Toast.makeText(getApplicationContext(), "You click Play button.", Toast.LENGTH_LONG).show();
-                        break;
-                    case ACTION_PAUSE:
-                        Toast.makeText(getApplicationContext(), "You click Pause button.", Toast.LENGTH_LONG).show();
-                        break;
+//                    case ACTION_PLAY:
+//                        Toast.makeText(getApplicationContext(), "You click Play button.", Toast.LENGTH_LONG).show();
+//                        break;
                 }
             }
 
         }
         return super.onStartCommand(intent, flags, startId);
     }
+
+//    private void startTimer(){
+//        if(timer != null ){
+//            return;
+//        }
+//        timer = new Timer();
+//        timer.scheduleAtFixedRate(new TimerTask() {
+//            @Override
+//            public void run() {
+//
+//                long millis=SystemClock.elapsedRealtime() - simpleChronometer.getBase();
+//                long seconds = (millis / 1000);
+//                Log.e("timefortest", "" + seconds);
+//            }
+//        }, 0, 1000);
+//    }
+
 
     /* Used to build and start foreground service. */
     private void startForegroundService() {
@@ -101,11 +149,11 @@ public class MyForegroundService extends Service {
             builder.setFullScreenIntent(pendingIntent, true);
 
             // Add Play button intent in notification.
-            Intent checkOutIntent = new Intent(this, MyForegroundService.class);
-            checkOutIntent.setAction(ACTION_PLAY);
-            PendingIntent pendingCheckOutIntent = PendingIntent.getService(this, 0, checkOutIntent, 0);
-            NotificationCompat.Action checkOutAction = new NotificationCompat.Action(android.R.drawable.ic_media_next, "Play", pendingCheckOutIntent);
-            builder.addAction(checkOutAction);
+//            Intent checkOutIntent = new Intent(this, MyForegroundService.class);
+//            checkOutIntent.setAction(ACTION_PLAY);
+//            PendingIntent pendingCheckOutIntent = PendingIntent.getService(this, 0, checkOutIntent, 0);
+//            NotificationCompat.Action checkOutAction = new NotificationCompat.Action(android.R.drawable.ic_media_next, "Play", pendingCheckOutIntent);
+//            builder.addAction(checkOutAction);
 
             // Add Pause button intent in notification.
 //            Intent pauseIntent = new Intent(this, MyService.class);
@@ -161,6 +209,8 @@ public class MyForegroundService extends Service {
 
     private void stopForegroundService() {
         Log.d(TAG_FOREGROUND_SERVICE, "Stop foreground service.");
+
+//        simpleChronometer.stop();
 
         // Stop foreground service and remove the notification.
         stopForeground(true);

@@ -125,6 +125,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 data.put("year", yearDropDown.getSelectedItem().toString());
                 data.put("email", emailEditText.getText().toString());
                 data.put("regNo", regIdEditText.getText().toString());
+                data.put("isCheckedIn", 0);
                 db.collection("users").document(mAuth.getCurrentUser().getUid())
                         .set(data)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {

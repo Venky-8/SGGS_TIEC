@@ -2,15 +2,18 @@ package com.example.android.sggstiec;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Chronometer;
+import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -19,29 +22,94 @@ public class CheckOutActivity extends AppCompatActivity {
 
     private static final String TAG = "CheckOutActivity";
     FirebaseFirestore db = FirebaseFirestore.getInstance();
-    Chronometer simpleChronometer;
     String document_id;
+    TextView timeTextView;
+    private FirebaseAuth mAuth;
+    boolean isCheckedIn = false;
+    SharedPreferences mPreferences;
+    private String sharedPrefFile = "com.example.android.sggstiec";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_out);
 
-        simpleChronometer = findViewById(R.id.simpleChronometer);
-        simpleChronometer.start();
+        timeTextView = findViewById(R.id.timeTextView);
+        mAuth = FirebaseAuth.getInstance();
 
-        Intent mainActivityIntent = getIntent();
-        document_id = mainActivityIntent.getStringExtra("document_id");
+//        Intent mainActivityIntent = getIntent();
+//        document_id = mainActivityIntent.getStringExtra("document_id");
 
-        Intent serviceIntent = new Intent(CheckOutActivity.this, MyForegroundService.class);
-        serviceIntent.setAction(MyForegroundService.ACTION_START_FOREGROUND_SERVICE);
-        startService(serviceIntent);
+//        DocumentReference docRef = db.collection("users").document(mAuth.getCurrentUser().getUid());
+//        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+//                if (task.isSuccessful()) {
+//                    DocumentSnapshot document = task.getResult();
+//                    if (document.exists()) {
+//                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+//                        document_id = String.valueOf(document.getData().get("document_id"));
+//                        isCheckedIn = (boolean) document.getData().get("isCheckedIn");
+//                        Log.v(TAG, "Document id: " + document_id);
+//                        Log.v(TAG, "is Checked in?: " + isCheckedIn);
+//                        if(isCheckedIn) {
+//                            Intent serviceIntent = new Intent(CheckOutActivity.this, MyForegroundService.class);
+//                            serviceIntent.setAction(MyForegroundService.ACTION_START_FOREGROUND_SERVICE);
+//                            startService(serviceIntent);
+//                        }
+//                    } else {
+//                        Log.d(TAG, "No such document");
+//                    }
+//                } else {
+//                    Log.d(TAG, "get failed with ", task.getException());
+//                }
+//            }
+//        });
+        mPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE);
+        int isCheckedIn = mPreferences.getInt("isCheckedIn", 0);
+        final String document_id = mPreferences.getString("document_id", "");
+
+//        if(isCheckedIn == 1) {
+//            Intent serviceIntent = new Intent(CheckOutActivity.this, MyForegroundService.class);
+//            serviceIntent.setAction(MyForegroundService.ACTION_START_FOREGROUND_SERVICE);
+//            startService(serviceIntent);
+//        }
 
         Button checkOut = findViewById(R.id.checkOutButton);
         checkOut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                simpleChronometer.stop();
+//                DocumentReference currentUserRef = db.collection("users").document(mAuth.getCurrentUser().getUid());
+//                currentUserRef
+//                        .update("isCheckedIn", false)
+//                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                            @Override
+//                            public void onSuccess(Void aVoid) {
+//                                Log.d(TAG, "User Checked out set to 0. DocumentSnapshot successfully updated!");
+//                            }
+//                        })
+//                        .addOnFailureListener(new OnFailureListener() {
+//                            @Override
+//                            public void onFailure(@NonNull Exception e) {
+//                                Log.w(TAG, "User not checked out, not set to 0. Error updating document", e);
+//                            }
+//                        });
+//
+//                currentUserRef
+//                        .update("document_id", "")
+//                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                            @Override
+//                            public void onSuccess(Void aVoid) {
+//                                Log.d(TAG, "User Checked out set to document id to empty. DocumentSnapshot successfully updated!");
+//                            }
+//                        })
+//                        .addOnFailureListener(new OnFailureListener() {
+//                            @Override
+//                            public void onFailure(@NonNull Exception e) {
+//                                Log.w(TAG, "User not checked out, not updated document id to empty. Error updating document", e);
+//                            }
+//                        });
+
                 DocumentReference attendanceRef = db.collection("attendance").document(document_id);
                 attendanceRef
                         .update("time_out", FieldValue.serverTimestamp())
@@ -49,6 +117,14 @@ public class CheckOutActivity extends AppCompatActivity {
                             @Override
                             public void onSuccess(Void aVoid) {
                                 Log.d(TAG, "DocumentSnapshot successfully updated!");
+
+                                // Update checked in to 0 and clear document_id in shared pref file
+                                mPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE);
+                                SharedPreferences.Editor preferencesEditor = mPreferences.edit();
+                                preferencesEditor.putInt("isCheckedIn", 0);
+                                preferencesEditor.putString("document_id", "");
+                                preferencesEditor.apply();
+
                                 Intent intent = new Intent(CheckOutActivity.this, MyForegroundService.class);
                                 intent.setAction(MyForegroundService.ACTION_STOP_FOREGROUND_SERVICE);
                                 startService(intent);
@@ -64,6 +140,53 @@ public class CheckOutActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+//    private BroadcastReceiver br = new BroadcastReceiver() {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            updateGUI(intent); // or whatever method used to update your GUI fields
+//        }
+//    };
+//
+//    private void updateGUI(Intent intent) {
+//        if (intent.getExtras() != null) {
+//            long elapsedMillis = intent.getLongExtra("timer", 0);
+//            Log.i(TAG, "Seconds Elapsed: " +  elapsedMillis / 1000);
+//
+//            long seconds = elapsedMillis / 1000;
+//            long minutes = seconds / 60;
+//            long hours = minutes / 60;
+//            String time = hours % 24 + ":" + minutes % 60 + ":" + seconds % 60;
+//
+//            Log.d(TAG, "Time: " + time);
+//
+//            timeTextView.setText(time);
+//        }
+//    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+//        registerReceiver(br, new IntentFilter(MyForegroundService.COUNTDOWN_BR));
+        Log.i(TAG, "Registered broadcast receiver");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+//        unregisterReceiver(br);
+        Log.i(TAG, "Unregistered broadcast receiver");
+    }
+
+    @Override
+    protected void onStop() {
+//        try {
+//            unregisterReceiver(br);
+//        } catch (Exception e) {
+//            // Receiver was probably already stopped in onPause()
+//        }
+        super.onStop();
     }
 
     @Override

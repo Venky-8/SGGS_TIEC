@@ -8,6 +8,7 @@ import androidx.appcompat.widget.Toolbar;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -19,15 +20,17 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mikepenz.materialdrawer.AccountHeader;
@@ -72,17 +75,30 @@ public class MainActivity extends AppCompatActivity {
     private PrimaryDrawerItem itemEdit = new PrimaryDrawerItem().withIdentifier(2).withName("Edit Profile");
     private PrimaryDrawerItem itemSignOut = new PrimaryDrawerItem().withIdentifier(3).withName("Sign Out");
 
+    private SharedPreferences mPreferences;
+    private String sharedPrefFile = "com.example.android.sggstiec";
+//    String document_id;
+//    boolean isCheckedIn = false;
+//    String name;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE);
+        int mIsCheckedIn = mPreferences.getInt("isCheckedIn", 0);
+        String mDocumentId = mPreferences.getString("document_id", "");
+
+        if(mIsCheckedIn == 1) {
+            startActivity(new Intent(getApplicationContext(), CheckOutActivity.class));
+        }
 
         Toolbar toolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(toolbar);
         toolbar.showOverflowMenu();
 
         mAuth = FirebaseAuth.getInstance();
-
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
 //        Log.i(TAG, "UID of current user: " + currentUser.getUid());
@@ -137,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
         location = new SimpleLocation(this);
         marshmallowGPSPremissionCheck();
 
+        scan_btn.setVisibility(View.VISIBLE);
         scan_btn.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -231,6 +248,35 @@ public class MainActivity extends AppCompatActivity {
         profile.withName(userName);
         profile.withEmail(email);
         headerResult.updateProfile(profile);
+
+//        Log.d(TAG, "Current user id = " + currentUser.getUid());
+//        DocumentReference docRef = db.collection("users").document(currentUser.getUid());
+//        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+//                if (task.isSuccessful()) {
+//                    DocumentSnapshot document = task.getResult();
+//                    if (document.exists()) {
+//                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+//                        name = String.valueOf(document.getData().get("firstName"));
+//                        document_id = String.valueOf(document.getData().get("document_id"));
+//                        isCheckedIn = (boolean) document.getData().get("isCheckedIn");
+//
+//                        Log.d(TAG, "isCheckedIn = " + isCheckedIn);
+//                        Log.d(TAG, "First Name = " + name);
+//                        if(isCheckedIn) {
+//                            startActivity(new Intent(getApplicationContext(), CheckOutActivity.class));
+//                        }
+//
+//                    } else {
+//                        Log.d(TAG, "No such document");
+//                    }
+//                } else {
+//                    Log.d(TAG, "get failed with ", task.getException());
+//                }
+//            }
+//        });
+
     }
 
     @Override
@@ -290,8 +336,47 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "DocumentSnapshot written with ID: " + document_id);
                             Toast.makeText(MainActivity.this, "Checked In!", Toast.LENGTH_LONG).show();
                             Intent myIntent = new Intent(getApplicationContext(), CheckOutActivity.class);
-                            myIntent.putExtra("document_id", document_id);
+//                            myIntent.putExtra("document_id", document_id);
+
+                            // Update user document with id
+//                            DocumentReference currentUserRef = db.collection("users").document(mAuth.getCurrentUser().getUid());
+//                            currentUserRef
+//                                    .update("isCheckedIn", true)
+//                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                        @Override
+//                                        public void onSuccess(Void aVoid) {
+//                                            Log.d(TAG, "User Checked in set to 1. DocumentSnapshot successfully updated!");
+//                                        }
+//                                    })
+//                                    .addOnFailureListener(new OnFailureListener() {
+//                                        @Override
+//                                        public void onFailure(@NonNull Exception e) {
+//                                            Log.w(TAG, "User not checked in, not set to 1. Error updating document", e);
+//                                        }
+//                                    });
+//
+//                            currentUserRef
+//                                    .update("document_id", document_id)
+//                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                        @Override
+//                                        public void onSuccess(Void aVoid) {
+//                                            Log.d(TAG, "Document id updated. DocumentSnapshot successfully updated!");
+//                                        }
+//                                    })
+//                                    .addOnFailureListener(new OnFailureListener() {
+//                                        @Override
+//                                        public void onFailure(@NonNull Exception e) {
+//                                            Log.w(TAG, "User not checked in, not updated document id. Error updating document", e);
+//                                        }
+//                                    });
+
+                            SharedPreferences.Editor preferencesEditor = mPreferences.edit();
+                            preferencesEditor.putInt("isCheckedIn", 1);
+                            preferencesEditor.putString("document_id", document_id);
+                            preferencesEditor.apply();
+
                             startActivity(myIntent);
+//                            checkedIn(document_id);
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                 @Override
