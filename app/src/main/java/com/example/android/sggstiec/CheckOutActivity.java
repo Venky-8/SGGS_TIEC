@@ -29,6 +29,7 @@ public class CheckOutActivity extends AppCompatActivity {
     SharedPreferences mPreferences;
     private String sharedPrefFile = "com.example.android.sggstiec";
     boolean isServiceRunning;
+    View progressOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,9 @@ public class CheckOutActivity extends AppCompatActivity {
 
         timeTextView = findViewById(R.id.timeTextView);
         mAuth = FirebaseAuth.getInstance();
+
+        progressOverlay = findViewById(R.id.progress_overlay);
+        setInvisible();
 
 //        Intent mainActivityIntent = getIntent();
 //        document_id = mainActivityIntent.getStringExtra("document_id");
@@ -68,7 +72,7 @@ public class CheckOutActivity extends AppCompatActivity {
 //        });
         mPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE);
         int isCheckedIn = mPreferences.getInt("isCheckedIn", 0);
-        final String document_id = mPreferences.getString("document_id", "");
+        document_id = mPreferences.getString("document_id", "");
         isServiceRunning = mPreferences.getBoolean("isServiceRunning", false);
 
         if(!isServiceRunning) {
@@ -115,7 +119,7 @@ public class CheckOutActivity extends AppCompatActivity {
 //                                Log.w(TAG, "User not checked out, not updated document id to empty. Error updating document", e);
 //                            }
 //                        });
-
+                setVisible();
                 DocumentReference attendanceRef = db.collection("attendance").document(document_id);
                 attendanceRef
                         .update("time_out", FieldValue.serverTimestamp())
@@ -171,18 +175,25 @@ public class CheckOutActivity extends AppCompatActivity {
 //        }
 //    }
 
+    public void setInvisible() {
+        progressOverlay.setVisibility(View.INVISIBLE);
+    }
+    public void setVisible() {
+        progressOverlay.setVisibility(View.VISIBLE);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
 //        registerReceiver(br, new IntentFilter(MyForegroundService.COUNTDOWN_BR));
-        Log.i(TAG, "Registered broadcast receiver");
+//        Log.i(TAG, "Registered broadcast receiver");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 //        unregisterReceiver(br);
-        Log.i(TAG, "Unregistered broadcast receiver");
+//        Log.i(TAG, "Unregistered broadcast receiver");
     }
 
     @Override

@@ -6,6 +6,8 @@
     android:layout_height="match_parent"
     tools:context=".CheckOutActivity">
 
+    <include layout="@layout/progress_wheel_overlay"/>
+
     <Button
         android:id="@+id/checkOutButton"
         android:layout_width="wrap_content"

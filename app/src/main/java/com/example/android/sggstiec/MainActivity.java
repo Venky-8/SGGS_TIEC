@@ -23,14 +23,11 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mikepenz.materialdrawer.AccountHeader;
@@ -64,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private String userName = "Welcome!";
     private String email = "Get Started";
 
+    View progressOverlay;
     private SimpleLocation location;
     private Button scan_btn;
     private Spinner purposeDropDown;
@@ -86,9 +84,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        progressOverlay = findViewById(R.id.progress_overlay);
+        setInvisible();
+
         mPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE);
         int mIsCheckedIn = mPreferences.getInt("isCheckedIn", 0);
-        String mDocumentId = mPreferences.getString("document_id", "");
+//        String mDocumentId = mPreferences.getString("document_id", "");
 
         if(mIsCheckedIn == 1) {
             startActivity(new Intent(getApplicationContext(), CheckOutActivity.class));
@@ -172,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                 float distanceInMeters = getDistance(latitude, longitude);
                 if (distanceInMeters <= 100) {
                     //TODO: CAMERA
-                    startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
+                    startActivityForResult(new Intent(getApplicationContext(), ScanCodeActivity.class), LAUNCH_SCAN_CODE_ACTIVITY);
                 } else {
                     Toast.makeText(MainActivity.this, "You are not near TIEC Lab", Toast.LENGTH_SHORT).show();
                     startActivityForResult(new Intent(getApplicationContext(), ScanCodeActivity.class), LAUNCH_SCAN_CODE_ACTIVITY);
@@ -199,6 +200,13 @@ public class MainActivity extends AppCompatActivity {
 //
 //        // ...
 //    }
+
+    public void setInvisible() {
+        progressOverlay.setVisibility(View.INVISIBLE);
+    }
+    public void setVisible() {
+        progressOverlay.setVisibility(View.VISIBLE);
+    }
 
 
     @Override
@@ -321,6 +329,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void markAttendance(String resultText) {
         if (resultText.equals("SGGS_TIEC_ENTRY")) {
+            // Set progress overlay
+            setVisible();
+
             Map<String, Object> data = new HashMap<>();
             data.put("user", db.document("users/" + mAuth.getCurrentUser().getUid()));
             data.put("time_in", FieldValue.serverTimestamp());
