@@ -23,11 +23,14 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mikepenz.materialdrawer.AccountHeader;
@@ -62,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private String email = "Get Started";
 
     View progressOverlay;
+    boolean profileFilled = false;
     private SimpleLocation location;
     private Button scan_btn;
     private Spinner purposeDropDown;
@@ -103,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
 //        Log.i(TAG, "UID of current user: " + currentUser.getUid());
+//        Picasso.get().load("http://i.imgur.com/DvpvklR.png").into(imageView);
 
         profile = new ProfileDrawerItem().withName(userName).withEmail(email).withIcon(getResources().getDrawable(R.mipmap.profile)).withIdentifier(100);
         headerResult = new AccountHeaderBuilder()
@@ -110,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
                 .withTranslucentStatusBar(true)
                 .addProfiles(profile)
                 .withSavedInstance(savedInstanceState)
+                .withHeaderBackground(R.drawable.drawer_img)
                 .build();
 
         drawer = new DrawerBuilder()
@@ -165,18 +171,22 @@ public class MainActivity extends AppCompatActivity {
 //                    // ask the user to enable location access
 //                    SimpleLocation.openSettings(MainActivity.this);
 //                }
-                final double latitude = location.getLatitude();
-                final double longitude = location.getLongitude();
+                if(profileFilled) {
+                    final double latitude = location.getLatitude();
+                    final double longitude = location.getLongitude();
 
-                // TODO
-                Toast.makeText(MainActivity.this, "Latitude: " + latitude + "Longitude: " + longitude, Toast.LENGTH_SHORT).show();
-                float distanceInMeters = getDistance(latitude, longitude);
-                if (distanceInMeters <= 100) {
-                    //TODO: CAMERA
-                    startActivityForResult(new Intent(getApplicationContext(), ScanCodeActivity.class), LAUNCH_SCAN_CODE_ACTIVITY);
+                    // TODO
+                    Toast.makeText(MainActivity.this, "Latitude: " + latitude + "Longitude: " + longitude, Toast.LENGTH_SHORT).show();
+                    float distanceInMeters = getDistance(latitude, longitude);
+                    if (distanceInMeters <= 100) {
+                        //TODO: CAMERA
+                        startActivityForResult(new Intent(getApplicationContext(), ScanCodeActivity.class), LAUNCH_SCAN_CODE_ACTIVITY);
+                    } else {
+                        Toast.makeText(MainActivity.this, "You are not near TIEC Lab", Toast.LENGTH_SHORT).show();
+                        startActivityForResult(new Intent(getApplicationContext(), ScanCodeActivity.class), LAUNCH_SCAN_CODE_ACTIVITY);
+                    }
                 } else {
-                    Toast.makeText(MainActivity.this, "You are not near TIEC Lab", Toast.LENGTH_SHORT).show();
-                    startActivityForResult(new Intent(getApplicationContext(), ScanCodeActivity.class), LAUNCH_SCAN_CODE_ACTIVITY);
+                    Toast.makeText(MainActivity.this, "Please complete your profile information from left top menu to mark attendance!", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -256,6 +266,8 @@ public class MainActivity extends AppCompatActivity {
         profile.withName(userName);
         profile.withEmail(email);
         headerResult.updateProfile(profile);
+
+        isProfileFilled();
 
 //        Log.d(TAG, "Current user id = " + currentUser.getUid());
 //        DocumentReference docRef = db.collection("users").document(currentUser.getUid());
@@ -418,6 +430,34 @@ public class MainActivity extends AppCompatActivity {
             // case blocks for other MenuItems (if any)
         }
         return true;
+    }
+
+    void isProfileFilled() {
+        DocumentReference docRef = db.collection("users").document(mAuth.getCurrentUser().getUid());
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                        if( document.get("firstName") != null && !String.valueOf(document.get("firstName")).isEmpty()
+                        && document.get("middleName") != null && !String.valueOf(document.get("middleName")).isEmpty()
+                        && document.get("lastName") != null && !String.valueOf(document.get("lastName")).isEmpty()
+                        && document.get("email") != null && !String.valueOf(document.get("email")).isEmpty()
+                        && document.get("year") != null && !String.valueOf(document.get("year")).isEmpty()) {
+                            profileFilled = true;
+                        }
+                        Log.d(TAG, "First Name: " + document.get("firstName"));
+                        Log.d(TAG, "Last Name: " + document.get("lastName"));
+                    } else {
+                        Log.d(TAG, "No such document");
+                    }
+                } else {
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
+            }
+        });
     }
 
     private float getDistance(double latitude, double longitude) {

@@ -25,7 +25,6 @@ public class CheckOutActivity extends AppCompatActivity {
     String document_id;
     TextView timeTextView;
     private FirebaseAuth mAuth;
-    boolean isCheckedIn = false;
     SharedPreferences mPreferences;
     private String sharedPrefFile = "com.example.android.sggstiec";
     boolean isServiceRunning;
