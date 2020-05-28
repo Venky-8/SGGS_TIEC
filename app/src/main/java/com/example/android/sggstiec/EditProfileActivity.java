@@ -69,6 +69,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 .withActivity(this)
                 .withTranslucentStatusBar(true)
                 .addProfiles(MainActivity.profile)
+                .withHeaderBackground(R.drawable.drawer_img)
                 .withSavedInstance(savedInstanceState)
                 .build();
 
