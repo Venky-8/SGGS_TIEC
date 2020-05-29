@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
     private String userName = "Welcome!";
     private String email = "Get Started";
 
-    View progressOverlay;
     boolean profileFilled = false;
     private SimpleLocation location;
     private Button scan_btn;
@@ -88,9 +87,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        progressOverlay = findViewById(R.id.progress_overlay);
-        setInvisible();
-
         mPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE);
         int mIsCheckedIn = mPreferences.getInt("isCheckedIn", 0);
 //        String mDocumentId = mPreferences.getString("document_id", "");
@@ -102,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(toolbar);
         toolbar.showOverflowMenu();
+
+        findViewById(R.id.indeterminateBar).setVisibility(View.INVISIBLE);
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -211,13 +209,6 @@ public class MainActivity extends AppCompatActivity {
 //        // ...
 //    }
 
-    public void setInvisible() {
-        progressOverlay.setVisibility(View.INVISIBLE);
-    }
-    public void setVisible() {
-        progressOverlay.setVisibility(View.VISIBLE);
-    }
-
 
     @Override
     protected void onStart() {
@@ -265,8 +256,12 @@ public class MainActivity extends AppCompatActivity {
         email = currentUser.getEmail();
         profile.withName(userName);
         profile.withEmail(email);
+        if(currentUser.getPhotoUrl() != null) {
+            profile.withIcon(currentUser.getPhotoUrl());
+        }
+        Log.d(TAG, "User name: " + userName);
+        Log.d(TAG, "User Photo url: " + currentUser.getPhotoUrl());
         headerResult.updateProfile(profile);
-
         isProfileFilled();
 
 //        Log.d(TAG, "Current user id = " + currentUser.getUid());
@@ -332,17 +327,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static String getCurrentTime(long epochTime) {
-        Date date = new Date(epochTime);
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        formatter.setTimeZone(TimeZone.getTimeZone("GMT+05:30"));
-        return formatter.format(date);
-    }
+//    public static String getCurrentTime(long epochTime) {
+//        Date date = new Date(epochTime);
+//        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+//        formatter.setTimeZone(TimeZone.getTimeZone("GMT+05:30"));
+//        return formatter.format(date);
+//    }
 
     private void markAttendance(String resultText) {
         if (resultText.equals("SGGS_TIEC_ENTRY")) {
-            // Set progress overlay
-            setVisible();
+
+            findViewById(R.id.indeterminateBar).setVisibility(View.VISIBLE);
 
             Map<String, Object> data = new HashMap<>();
             data.put("user", db.document("users/" + mAuth.getCurrentUser().getUid()));
@@ -407,6 +402,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.w(TAG, "Error writing document", e);
                 }
             });
+        } else {
+            Toast.makeText(this, "Could not recognize QR Code. Please scan again.", Toast.LENGTH_SHORT).show();
         }
     }
 

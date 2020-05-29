@@ -27,17 +27,15 @@ public class CheckOutActivity extends AppCompatActivity {
     SharedPreferences mPreferences;
     private String sharedPrefFile = "com.example.android.sggstiec";
     boolean isServiceRunning;
-    View progressOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_out);
 
-        mAuth = FirebaseAuth.getInstance();
+        findViewById(R.id.indeterminateBar).setVisibility(View.INVISIBLE);
 
-        progressOverlay = findViewById(R.id.progress_overlay);
-        setInvisible();
+        mAuth = FirebaseAuth.getInstance();
 
 //        Intent mainActivityIntent = getIntent();
 //        document_id = mainActivityIntent.getStringExtra("document_id");
@@ -116,7 +114,9 @@ public class CheckOutActivity extends AppCompatActivity {
 //                                Log.w(TAG, "User not checked out, not updated document id to empty. Error updating document", e);
 //                            }
 //                        });
-                setVisible();
+
+                findViewById(R.id.indeterminateBar).setVisibility(View.VISIBLE);
+
                 DocumentReference attendanceRef = db.collection("attendance").document(document_id);
                 attendanceRef
                         .update("time_out", FieldValue.serverTimestamp())
@@ -171,13 +171,6 @@ public class CheckOutActivity extends AppCompatActivity {
 //            timeTextView.setText(time);
 //        }
 //    }
-
-    public void setInvisible() {
-        progressOverlay.setVisibility(View.INVISIBLE);
-    }
-    public void setVisible() {
-        progressOverlay.setVisibility(View.VISIBLE);
-    }
 
     @Override
     protected void onResume() {
