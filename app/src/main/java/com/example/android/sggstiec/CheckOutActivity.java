@@ -23,7 +23,6 @@ public class CheckOutActivity extends AppCompatActivity {
     private static final String TAG = "CheckOutActivity";
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     String document_id;
-    TextView timeTextView;
     private FirebaseAuth mAuth;
     SharedPreferences mPreferences;
     private String sharedPrefFile = "com.example.android.sggstiec";
@@ -35,7 +34,6 @@ public class CheckOutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_out);
 
-        timeTextView = findViewById(R.id.timeTextView);
         mAuth = FirebaseAuth.getInstance();
 
         progressOverlay = findViewById(R.id.progress_overlay);
