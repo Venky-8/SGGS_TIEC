@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.android.sggstiec"
     android:versionCode="1"
     android:versionName="1.0">
@@ -17,16 +18,20 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="LockedOrientationActivity">
         <activity
             android:name=".CheckOutActivity"
+            android:screenOrientation="portrait"
             android:launchMode="singleTop"/>
         <activity
             android:name=".EditProfileActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
         <activity android:name=".ScanCodeActivity" />
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,9 +43,7 @@
         <service
             android:name=".MyForegroundService"
             android:enabled="true"
-            android:exported="true" />
-
-
+            android:exported="false" />
     </application>
 
 </manifest>

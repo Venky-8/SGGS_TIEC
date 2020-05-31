@@ -16,6 +16,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -41,8 +42,6 @@ public class EditProfileActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    private AccountHeader headerResult;
-    private Drawer drawer;
     private PrimaryDrawerItem itemHome = new PrimaryDrawerItem().withIdentifier(1).withName("Home");
     private PrimaryDrawerItem itemEdit = new PrimaryDrawerItem().withIdentifier(2).withName("Edit Profile");
     private PrimaryDrawerItem itemSignOut = new PrimaryDrawerItem().withIdentifier(3).withName("Sign Out");
@@ -65,7 +64,7 @@ public class EditProfileActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.showOverflowMenu();
 
-        headerResult = new AccountHeaderBuilder()
+        AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withTranslucentStatusBar(true)
                 .addProfiles(MainActivity.profile)
@@ -73,7 +72,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 .withSavedInstance(savedInstanceState)
                 .build();
 
-        drawer = new DrawerBuilder()
+        Drawer drawer = new DrawerBuilder()
                 .withActivity(this)
                 .withToolbar(toolbar)
                 .withAccountHeader(headerResult)
@@ -95,8 +94,14 @@ public class EditProfileActivity extends AppCompatActivity {
                             case 2:
                                 break;
                             default:
-                                mAuth.signOut();
-                                finishAffinity();
+                                AuthUI.getInstance()
+                                        .signOut(getApplicationContext())
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                // ...
+                                                finishAffinity();
+                                            }
+                                        });
                                 break;
                         }
                         return false;
@@ -129,7 +134,6 @@ public class EditProfileActivity extends AppCompatActivity {
                 data.put("year", yearDropDown.getSelectedItem().toString());
                 data.put("email", emailEditText.getText().toString());
                 data.put("regNo", regIdEditText.getText().toString());
-                data.put("isCheckedIn", 0);
                 db.collection("users").document(mAuth.getCurrentUser().getUid())
                         .set(data)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -187,8 +191,14 @@ public class EditProfileActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_sign_out: {
                 // do your sign-out stuff
-                mAuth.signOut();
-                finishAffinity();
+                AuthUI.getInstance()
+                        .signOut(this)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            public void onComplete(@NonNull Task<Void> task) {
+                                // ...
+                                finishAffinity();
+                            }
+                        });
                 break;
             }
             // case blocks for other MenuItems (if any)

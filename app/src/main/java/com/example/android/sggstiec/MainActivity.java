@@ -7,10 +7,13 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,10 +22,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -42,13 +47,13 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
+import com.mikepenz.materialdrawer.util.DrawerImageLoader;
+import com.squareup.picasso.Picasso;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import im.delight.android.location.SimpleLocation;
 
@@ -56,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
-    private static final int SIGN_IN_REQUEST_CODE = 1;
+    private static final int RC_SIGN_IN = 1;
     private static final int LAUNCH_SCAN_CODE_ACTIVITY = 2;
 
     private FirebaseAuth mAuth;
@@ -66,27 +71,22 @@ public class MainActivity extends AppCompatActivity {
 
     boolean profileFilled = false;
     private SimpleLocation location;
-    private Button scan_btn;
     private Spinner purposeDropDown;
 
     private AccountHeader headerResult;
-    private Drawer drawer;
     public static IProfile profile;
     private PrimaryDrawerItem itemHome = new PrimaryDrawerItem().withIdentifier(1).withName("Home");
     private PrimaryDrawerItem itemEdit = new PrimaryDrawerItem().withIdentifier(2).withName("Edit Profile");
     private PrimaryDrawerItem itemSignOut = new PrimaryDrawerItem().withIdentifier(3).withName("Sign Out");
 
     private SharedPreferences mPreferences;
-    private String sharedPrefFile = "com.example.android.sggstiec";
-//    String document_id;
-//    boolean isCheckedIn = false;
-//    String name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        String sharedPrefFile = "com.example.android.sggstiec";
         mPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE);
         int mIsCheckedIn = mPreferences.getInt("isCheckedIn", 0);
 //        String mDocumentId = mPreferences.getString("document_id", "");
@@ -104,9 +104,6 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
-//        Log.i(TAG, "UID of current user: " + currentUser.getUid());
-//        Picasso.get().load("http://i.imgur.com/DvpvklR.png").into(imageView);
-
         profile = new ProfileDrawerItem().withName(userName).withEmail(email).withIcon(getResources().getDrawable(R.mipmap.profile)).withIdentifier(100);
         headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
@@ -116,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                 .withHeaderBackground(R.drawable.drawer_img)
                 .build();
 
-        drawer = new DrawerBuilder()
+        Drawer drawer = new DrawerBuilder()
                 .withActivity(this)
                 .withToolbar(toolbar)
                 .withAccountHeader(headerResult)
@@ -139,8 +136,14 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             default:
                                 Log.d(TAG, "identifier:" + (int) drawerItem.getIdentifier());
-                                mAuth.signOut();
-                                finishAffinity();
+                                AuthUI.getInstance()
+                                        .signOut(getApplicationContext())
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                // ...
+                                                finishAffinity();
+                                            }
+                                        });
                                 break;
                         }
                         return false;
@@ -148,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .build();
 
-        scan_btn = findViewById(R.id.scan_button);
+        Button scan_btn = findViewById(R.id.scan_button);
         purposeDropDown = findViewById(R.id.purpose_spinner);
 
         String[] items = new String[]{"Study", "Project", "Other"};
@@ -239,58 +242,61 @@ public class MainActivity extends AppCompatActivity {
     private void signIn() {
         // Check if user is signed in (non-null) and update UI accordingly.
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            // Choose authentication providers
+            List<AuthUI.IdpConfig> providers = Arrays.asList(
+                    new AuthUI.IdpConfig.EmailBuilder().build(),
+                    new AuthUI.IdpConfig.GoogleBuilder().build());
             // Start sign in/sign up activity
             startActivityForResult(
                     AuthUI.getInstance()
                             .createSignInIntentBuilder()
                             .setIsSmartLockEnabled(false)
+                            .setAvailableProviders(providers)
                             .build(),
-                    SIGN_IN_REQUEST_CODE
+                    RC_SIGN_IN
             );
         }
     }
 
-    private void updateUI(FirebaseUser currentUser) {
+    private void updateUI(final FirebaseUser currentUser) {
         Log.d(TAG, "updateUI() Called");
         userName = currentUser.getDisplayName();
         email = currentUser.getEmail();
         profile.withName(userName);
         profile.withEmail(email);
         if(currentUser.getPhotoUrl() != null) {
-            profile.withIcon(currentUser.getPhotoUrl());
+            Log.d(TAG, "User Photo url: " + currentUser.getPhotoUrl());
+            profile.withIcon(currentUser.getPhotoUrl().toString());
+            DrawerImageLoader.init(new DrawerImageLoader.IDrawerImageLoader() {
+                @Override
+                public void set(ImageView imageView, Uri uri, Drawable placeholder) {
+                    Picasso.get().load(currentUser.getPhotoUrl().toString()).placeholder(placeholder).into(imageView);
+                }
+
+                @Override
+                public void set(ImageView imageView, Uri uri, Drawable placeholder, String tag) {
+                    set(imageView, uri, placeholder);
+                }
+
+                @Override
+                public void cancel(ImageView imageView) {
+                    Picasso.get().cancelRequest(imageView);
+                }
+
+                @Override
+                public Drawable placeholder(Context ctx) {
+                    return null;
+                }
+
+                @Override
+                public Drawable placeholder(Context ctx, String tag) {
+                    return null;
+                }
+            });
         }
         Log.d(TAG, "User name: " + userName);
-        Log.d(TAG, "User Photo url: " + currentUser.getPhotoUrl());
         headerResult.updateProfile(profile);
         isProfileFilled();
-
-//        Log.d(TAG, "Current user id = " + currentUser.getUid());
-//        DocumentReference docRef = db.collection("users").document(currentUser.getUid());
-//        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-//            @Override
-//            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-//                if (task.isSuccessful()) {
-//                    DocumentSnapshot document = task.getResult();
-//                    if (document.exists()) {
-//                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-//                        name = String.valueOf(document.getData().get("firstName"));
-//                        document_id = String.valueOf(document.getData().get("document_id"));
-//                        isCheckedIn = (boolean) document.getData().get("isCheckedIn");
-//
-//                        Log.d(TAG, "isCheckedIn = " + isCheckedIn);
-//                        Log.d(TAG, "First Name = " + name);
-//                        if(isCheckedIn) {
-//                            startActivity(new Intent(getApplicationContext(), CheckOutActivity.class));
-//                        }
-//
-//                    } else {
-//                        Log.d(TAG, "No such document");
-//                    }
-//                } else {
-//                    Log.d(TAG, "get failed with ", task.getException());
-//                }
-//            }
-//        });
 
     }
 
@@ -298,7 +304,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == SIGN_IN_REQUEST_CODE) {
+        if (requestCode == RC_SIGN_IN) {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this,
                         "Successfully signed in. Welcome!",
@@ -323,6 +330,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (resultCode == Activity.RESULT_CANCELED) {
                 //Write your code if there's no result
+                Log.d(TAG, "Please try again");
             }
         }
     }
@@ -354,39 +362,6 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "DocumentSnapshot written with ID: " + document_id);
                             Toast.makeText(MainActivity.this, "Checked In!", Toast.LENGTH_LONG).show();
                             Intent myIntent = new Intent(getApplicationContext(), CheckOutActivity.class);
-//                            myIntent.putExtra("document_id", document_id);
-
-                            // Update user document with id
-//                            DocumentReference currentUserRef = db.collection("users").document(mAuth.getCurrentUser().getUid());
-//                            currentUserRef
-//                                    .update("isCheckedIn", true)
-//                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                        @Override
-//                                        public void onSuccess(Void aVoid) {
-//                                            Log.d(TAG, "User Checked in set to 1. DocumentSnapshot successfully updated!");
-//                                        }
-//                                    })
-//                                    .addOnFailureListener(new OnFailureListener() {
-//                                        @Override
-//                                        public void onFailure(@NonNull Exception e) {
-//                                            Log.w(TAG, "User not checked in, not set to 1. Error updating document", e);
-//                                        }
-//                                    });
-//
-//                            currentUserRef
-//                                    .update("document_id", document_id)
-//                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                        @Override
-//                                        public void onSuccess(Void aVoid) {
-//                                            Log.d(TAG, "Document id updated. DocumentSnapshot successfully updated!");
-//                                        }
-//                                    })
-//                                    .addOnFailureListener(new OnFailureListener() {
-//                                        @Override
-//                                        public void onFailure(@NonNull Exception e) {
-//                                            Log.w(TAG, "User not checked in, not updated document id. Error updating document", e);
-//                                        }
-//                                    });
 
                             SharedPreferences.Editor preferencesEditor = mPreferences.edit();
                             preferencesEditor.putInt("isCheckedIn", 1);
@@ -420,8 +395,16 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_sign_out: {
                 // do your sign-out stuff
-                mAuth.signOut();
-                finishAffinity();
+//                mAuth.signOut();
+//                finishAffinity();
+                AuthUI.getInstance()
+                        .signOut(this)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            public void onComplete(@NonNull Task<Void> task) {
+                                // ...
+                                finishAffinity();
+                            }
+                        });
                 break;
             }
             // case blocks for other MenuItems (if any)
@@ -485,9 +468,10 @@ public class MainActivity extends AppCompatActivity {
                             Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.CAMERA}
                     , MY_PERMISSIONS_REQUEST_LOCATION);
-        } else {
-            //   gps functions.
         }
+//        else {
+//            //   gps functions.
+//        }
     }
 
     @Override
