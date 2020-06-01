@@ -4,4 +4,8 @@
     <string name="text_location_permission">Location permission is required to identify if you are in TIEC lab</string>
     <string name="ok">Ok</string>
     <string name="toolbar_sign_out">Sign Out</string>
+    <string name="mark_attendance">Mark Attendance</string>
+    <string name="innovate_photo">innovate photo</string>
+    <string name="select_your_purpose_and_scan_qr_code_to_mark_attendance">Select your purpose and scan QR code to mark Attendance</string>
+    <string name="scan_qr_code">Scan QR CODE</string>
 </resources>

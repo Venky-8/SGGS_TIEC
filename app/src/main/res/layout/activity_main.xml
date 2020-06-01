@@ -27,14 +27,15 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <!-- Media -->
+
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="194dp"
-                android:contentDescription="innovate photo"
+                android:contentDescription="@string/innovate_photo"
                 android:scaleType="centerCrop"
                 app:srcCompat="@drawable/innovate" />
 
@@ -46,44 +47,42 @@
 
                 <!-- Title, secondary and supporting text -->
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mark Attendance"
+                    android:layout_gravity="center|center_horizontal|center_vertical"
+                    android:autoText="false"
+                    android:gravity="center"
+                    android:text="@string/mark_attendance"
                     android:textAppearance="?attr/textAppearanceHeadline6" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Select your purpose and scan QR code to mark Attendance"
-                    android:textAppearance="?attr/textAppearanceBody2"
-                    android:textColor="?android:attr/textColorSecondary" />
-
-                <Spinner
-                    android:id="@+id/purpose_spinner"
-                    android:layout_width="215dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:text="@string/select_your_purpose_and_scan_qr_code_to_mark_attendance"
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textColor="?android:attr/textColorSecondary" />
 
             </LinearLayout>
 
             <!-- Buttons -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:orientation="horizontal">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/scan_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginRight="8dp"
-                    android:text="Scan QR CODE" />
-            </LinearLayout>
+            <Spinner
+                android:id="@+id/purpose_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_marginTop="16dp"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/scan_button"
+                android:layout_width="383dp"
+                android:layout_height="48dp"
+                android:text="@string/scan_qr_code"
+                tools:layout_editor_absoluteX="15dp"
+                tools:layout_editor_absoluteY="445dp" />
 
         </LinearLayout>
 
