@@ -69,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
     private String userName = "Welcome!";
     private String email = "Get Started";
 
+    private String name = "";
+    private String regNo = "";
+
     boolean profileFilled = false;
     private SimpleLocation location;
     private Spinner purposeDropDown;
@@ -348,6 +351,8 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.indeterminateBar).setVisibility(View.VISIBLE);
 
             Map<String, Object> data = new HashMap<>();
+            data.put("name", name);
+            data.put("regNo", regNo);
             data.put("user", db.document("users/" + mAuth.getCurrentUser().getUid()));
             data.put("time_in", FieldValue.serverTimestamp());
             data.put("time_out", FieldValue.serverTimestamp());
@@ -425,8 +430,11 @@ public class MainActivity extends AppCompatActivity {
                         && document.get("middleName") != null && !String.valueOf(document.get("middleName")).isEmpty()
                         && document.get("lastName") != null && !String.valueOf(document.get("lastName")).isEmpty()
                         && document.get("email") != null && !String.valueOf(document.get("email")).isEmpty()
-                        && document.get("year") != null && !String.valueOf(document.get("year")).isEmpty()) {
+                        && document.get("year") != null && !String.valueOf(document.get("year")).isEmpty()
+                        && document.get("regNo") != null && !String.valueOf(document.get("regNo")).isEmpty()) {
                             profileFilled = true;
+                            name = document.get("firstName") + " " + document.get("lastName");
+                            regNo = String.valueOf(document.get("regNo"));
                         }
                         Log.d(TAG, "First Name: " + document.get("firstName"));
                         Log.d(TAG, "Last Name: " + document.get("lastName"));
